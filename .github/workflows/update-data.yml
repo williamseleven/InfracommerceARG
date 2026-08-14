@@ -24,89 +24,19 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Generar data.json
+      - name: Diagnostico - archivos del repo
         run: |
-          python - << 'PYEOF'
-          import csv, json, io, datetime, urllib.request
+          echo "== Directorio actual =="
+          pwd
+          echo "== Archivos =="
+          ls -la
+          echo "== Carpeta scripts =="
+          ls -la scripts || echo "FALTA la carpeta scripts/"
+          echo "== Python =="
+          python --version
 
-          CSV_URL = "https://vtex.brandlive.net/upload/queries/ops-om-ar.csv"
-          C2MAP = {"moova":"Moova","cabify":"Cabify","andreani":"Andreani","fasttrack":"Fasttrack","innerlogistics":"Inner","ocasa":"Ocasa","pickit":"Pickit"}
-          PMAP = {"andreani":"Andreani","cabify":"Cabify","fasttrack":"Fasttrack","hop":"HOP","inner":"Inner","moova":"Moova","ocasa":"Ocasa","pickit":"Pickit","elogisticaregular":"Elogistica","elogistica":"Elogistica"}
-          COURIER_ORDER = ["Moova","Andreani","Ocasa","Fasttrack","Inner","Pickit","Cabify","Elogistica","HOP","Sin asignar"]
-          TIPO_ORDER = ["Regular","Same Day","Nextday","SPU","SPU-HOP","HTH","Meliflex","Reverse","Otro"]
-          SVC_NICE = {"regular":"Regular","pickpoint":"Pick-up point","spu":"SPU / retiro","all":"Estándar (all)","sameday":"Same day","sameday_pm":"Same day PM","nextday":"Next day","nextday_pm":"Next day PM","topper_misiones":"Topper Misiones","(sin dato)":"Sin dato","ampm":"AM/PM"}
-
-          def courier_of(m, c2):
-              ml=(m or "").lower()
-              if ml in ("me2_flex_bsas","me2_flex_caba"): return C2MAP.get((c2 or "").strip().lower(),"Sin asignar")
-              if ml.startswith("spu_estandar"): return "Elogistica"
-              if ml.startswith("spu_ocasa"): return "Ocasa"
-              pre=ml.split("_")[0].split(":")[0]
-              if pre in PMAP: return PMAP[pre]
-              return C2MAP.get((c2 or "").strip().lower(),"Sin asignar")
-          def tipo_of(m):
-              ml=(m or "").lower()
-              if ml in ("me2_flex_bsas","me2_flex_caba"): return "Meliflex"
-              if "reverse" in ml: return "Reverse"
-              if ml=="hop_pickuppoints": return "SPU-HOP"
-              if "hth" in ml: return "HTH"
-              if "sameday" in ml: return "Same Day"
-              if "nextday" in ml: return "Nextday"
-              if "_spu_" in ml or ml.startswith("spu_") or ml=="pickit" or "pickuppoints" in ml: return "SPU"
-              if "regular" in ml: return "Regular"
-              return "Otro"
-          def prov_of(s):
-              if not s: return "OTRA"
-              s=str(s).strip().lower()
-              if "autonoma" in s or s=="capital federal" or "ciudad" in s: return "CABA"
-              if "buenos aires" in s: return "BA"
-              return "OTRA"
-          def isd(s): return len(s)==10 and s[4]=="-" and s[7]=="-" and s[:4].isdigit()
-
-          req=urllib.request.Request(CSV_URL, headers={"User-Agent":"Mozilla/5.0"})
-          text=urllib.request.urlopen(req, timeout=300).read().decode("utf-8","ignore")
-          print("CSV descargado:", len(text)//1048576, "MB")
-          reader=csv.DictReader(io.StringIO(text))
-
-          seen=set(); recs=[]
-          for r in reader:
-              oid=r.get("order_id")
-              if not oid or oid in seen: continue
-              seen.add(oid)
-              if (r.get("order_status") or "")=="cancelled": continue
-              method=r.get("ship_shipping-method") or ""
-              if method=="me2": continue
-              brand=r.get("brand_name") or "—"
-              if brand=="Bocashop cabj": brand="Bocashop"
-              recs.append({"brand":brand,"cour":courier_of(method,r.get("ship_carier2")),"tp":tipo_of(method),
-                "dt":(r.get("order_channel-created-at") or "")[:10],"del":1 if (r.get("order_status") or "")=="delivered" else 0,
-                "svc":r.get("ship_shipping-type") or "(sin dato)","prov":prov_of(r.get("order_state")),
-                "zip":(str(r.get("order_zipcode") or "")).strip()})
-          if not recs: raise SystemExit("Sin pedidos validos")
-
-          bc={}
-          for r in recs: bc[r["brand"]]=bc.get(r["brand"],0)+1
-          brands=sorted(bc,key=lambda b:-bc[b])
-          couriers=[c for c in COURIER_ORDER if c in {r["cour"] for r in recs}]
-          tipos=[t for t in TIPO_ORDER if t in {r["tp"] for r in recs}]
-          sc={}
-          for r in recs: sc[r["svc"]]=sc.get(r["svc"],0)+1
-          services=sorted(sc,key=lambda s:-sc[s])
-          dates=sorted({r["dt"] for r in recs if isd(r["dt"])})
-          bi={b:i for i,b in enumerate(brands)}; ci={c:i for i,c in enumerate(couriers)}
-          ti={t:i for i,t in enumerate(tipos)}; si={s:i for i,s in enumerate(services)}; di={d:i for i,d in enumerate(dates)}
-          bazips=[]; zi={}
-          for r in recs:
-              if r["prov"]=="BA" and r["zip"] not in zi:
-                  zi[r["zip"]]=len(bazips); bazips.append(r["zip"])
-          orders=[[bi[r["brand"]],ci[r["cour"]],si[r["svc"]],di.get(r["dt"],0),(zi[r["zip"]] if r["prov"]=="BA" else -1),r["del"],ti[r["tp"]]] for r in recs]
-          payload={"brands":brands,"couriers":couriers,"tipos":tipos,"services":services,
-            "svc_nice":[SVC_NICE.get(s,s) for s in services],"dates":dates,"bazips":bazips,"orders":orders,
-            "date_min":dates[0] if dates else None,"date_max":dates[-1] if dates else None,
-            "generated_at":datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00","Z")}
-          json.dump(payload, open("data.json","w",encoding="utf-8"), ensure_ascii=False, separators=(",",":"))
-          print("OK:", len(orders), "pedidos ->", brands[:3], "...")
-          PYEOF
+      - name: Generar data.json
+        run: python scripts/build_data.py
 
       - name: Commit si hubo cambios
         run: |
@@ -114,7 +44,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
           if git diff --staged --quiet; then
-            echo "Sin cambios"
+            echo "Sin cambios en data.json"
           else
             git commit -m "data: actualizacion automatica $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             git push
