@@ -27,6 +27,11 @@ SVC_NICE = {"regular": "Regular", "pickpoint": "Pick-up point", "spu": "SPU / re
             "nextday": "Next day", "nextday_pm": "Next day PM",
             "topper_misiones": "Topper Misiones", "(sin dato)": "Sin dato", "ampm": "AM/PM"}
 
+# Cuando el metodo es solo "elogistica" (no indica el tipo), se toma de ship_shipping-type.
+STYPE_TO_TIPO = {"regular": "Regular", "sameday": "Same Day", "sameday_pm": "Same Day",
+                 "nextday": "Nextday", "nextday_pm": "Nextday", "spu": "SPU",
+                 "pickpoint": "SPU", "ampm": "Regular", "topper_misiones": "Regular", "all": "Regular"}
+
 # Columnas del export.csv (encabezado -> columna del CSV origen). Las derivadas se calculan.
 EXPORT_COLS = [
     ("ID Pedido", "order_id"),
@@ -71,8 +76,10 @@ def courier_of(method, c2):
     return C2MAP.get((c2 or "").strip().lower(), "Sin asignar")
 
 
-def tipo_of(method):
+def tipo_of(method, stype=None):
     ml = (method or "").lower()
+    if ml == "elogistica":
+        return STYPE_TO_TIPO.get((stype or "").strip().lower(), "Otro")
     if ml in ("me2_flex_bsas", "me2_flex_caba"): return "Meliflex"
     if "reverse" in ml: return "Reverse"
     if ml == "hop_pickuppoints": return "SPU-HOP"
@@ -150,7 +157,7 @@ def main():
         if brand == "Bocashop cabj":
             brand = "Bocashop"
         cour = courier_of(method, r.get("ship_carier2"))
-        tp = tipo_of(method)
+        tp = tipo_of(method, r.get("ship_shipping-type"))
         dt = (r.get("order_channel-created-at") or "")[:10]
         prov = prov_of(r.get("order_state"))
         plabel = prov_label(r.get("order_state"))
