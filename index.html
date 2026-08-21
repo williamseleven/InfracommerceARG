@@ -143,6 +143,38 @@ svg.chart{display:block;width:100%;height:auto;overflow:visible}
 .zlist::-webkit-scrollbar,.ddpanel::-webkit-scrollbar{width:8px}
 .zlist::-webkit-scrollbar-thumb,.ddpanel::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
 .footnote{color:var(--mut2);font-size:10.5px;margin-top:14px;line-height:1.6}
+/* detail table */
+.tbltools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 14px}
+.search{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 12px;color:var(--mut2);min-width:240px}
+.search input{background:none;border:0;outline:none;color:var(--ink);font:500 12.5px var(--mono);width:100%}
+.search input::placeholder{color:var(--mut2)}
+.sortsel{position:relative;display:flex;align-items:center;gap:9px}
+.sortsel .sl{font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut2)}
+.sortbtn{display:flex;align-items:center;gap:9px;font:500 12.5px var(--mono);color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 12px;cursor:pointer}
+.sortbtn:hover{border-color:#37424f}.sortbtn svg{opacity:.6}
+.sortmenu{position:absolute;top:calc(100% + 6px);right:0;z-index:20;background:#111720;border:1px solid var(--line);border-radius:10px;padding:6px;min-width:190px;box-shadow:0 16px 40px rgba(0,0,0,.55);display:none}
+.sortsel.open .sortmenu{display:block}
+.sopt{padding:8px 10px;border-radius:7px;font-size:12.5px;color:var(--ink);cursor:pointer}
+.sopt:hover{background:var(--panel2)}.sopt.on{color:var(--amber)}
+.export.tblexp{margin-left:auto}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table.dtable{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.dtable th{position:sticky;top:0;background:var(--panel2);text-align:left;font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mut2);padding:11px 12px;white-space:nowrap;border-bottom:1px solid var(--line)}
+.dtable th.num,.dtable td.num{text-align:right;color:var(--mut2);width:54px}
+.dtable td{padding:10px 12px;font-size:12px;color:var(--ink);border-bottom:1px solid var(--line2);white-space:nowrap}
+.dtable tbody tr:hover{background:var(--panel2)}
+.dtable td.mono{font-family:var(--mono)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font:600 10.5px var(--mono);letter-spacing:.02em}
+.dtable .empty{padding:26px;text-align:center;color:var(--mut2)}
+.tblpager{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:12px;flex-wrap:wrap}
+.pginfo{font-size:11.5px;color:var(--mut)}
+.pgbtns{display:flex;align-items:center;gap:5px}
+.pgb{font:600 12px var(--mono);color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer}
+.pgb:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+.pgb:disabled{opacity:.35;cursor:default}
+.pgnow{font:600 12px var(--mono);color:var(--amber);padding:0 8px;min-width:30px;text-align:center}
+.tblload{padding:30px;text-align:center;color:var(--mut)}
+.tblload .sp{display:inline-block;width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--amber);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:10px}
 @media(max-width:920px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.svc{grid-template-columns:repeat(2,1fr)}.maprow{grid-template-columns:1fr}.brand h1{font-size:24px}.filterbar .clr{margin-left:0;width:100%;justify-content:space-between}}
 .status{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--mut);margin-top:10px;justify-content:flex-end}
 .status i{width:7px;height:7px;border-radius:50%;background:var(--mut2);flex:none}
@@ -230,8 +262,8 @@ svg.chart{display:block;width:100%;height:auto;overflow:visible}
 
   <div class="grid" style="margin-bottom:16px">
     <div class="panel">
-      <div class="phead"><h2>Tipos de servicio</h2><span class="meta" id="svcMeta"></span></div>
-      <div class="cap">Distribución por <em>ship_shipping-type</em>.</div>
+      <div class="phead"><h2>Tipo de envío</h2><span class="meta" id="svcMeta"></span></div>
+      <div class="cap">Según el servicio de <em>ship_shipping-method</em> (regla por tipo).</div>
       <div class="svcwrap">
         <div class="donutbox"><svg id="svcDonut" viewBox="0 0 220 220"></svg><div class="donutTip" id="svcDonutTip"></div></div>
         <div class="svc" id="svc"></div>
@@ -253,6 +285,44 @@ svg.chart{display:block;width:100%;height:auto;overflow:visible}
         <div class="zones"><h3>Zonas más vendidas</h3><div class="zlist" id="zlist"></div></div>
       </div>
       <div class="footnote" id="mapFoot"></div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:16px">
+    <div class="panel">
+      <div class="phead"><h2>Detalle de pedidos</h2><span class="meta" id="tblMeta"></span></div>
+      <div class="cap">Respeta los filtros de arriba. Buscá por ID, tracking, marca, courier o estado.</div>
+      <div class="tbltools">
+        <div class="search"><svg viewBox="0 0 16 16" width="14" height="14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5"/></svg><input id="tblSearch" type="text" placeholder="Buscar…" autocomplete="off"></div>
+        <div class="sortsel">
+          <span class="sl">Ordenar por</span>
+          <button id="sortBtn" class="sortbtn"><span id="sortLbl">Compra más reciente</span><svg viewBox="0 0 10 6" width="10" height="6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button>
+          <div class="sortmenu" id="sortMenu">
+            <div class="sopt on" data-dir="desc">Compra más reciente</div>
+            <div class="sopt" data-dir="asc">Compra más antigua</div>
+          </div>
+        </div>
+        <button class="export tblexp" id="tblExport">Exportar Excel</button>
+      </div>
+      <div class="tblwrap">
+        <table class="dtable">
+          <thead><tr>
+            <th class="num">N°</th><th>ID OMS</th><th>ID Tracking</th><th>Marca</th>
+            <th>Fecha de compra</th><th>Courier</th><th>Tipo de envío</th><th>Estado</th>
+          </tr></thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+      <div class="tblpager">
+        <span id="tblRange" class="pginfo">—</span>
+        <div class="pgbtns">
+          <button id="pgFirst" class="pgb">«</button>
+          <button id="pgPrev" class="pgb">‹</button>
+          <span id="pgNow" class="pgnow">1</span>
+          <button id="pgNext" class="pgb">›</button>
+          <button id="pgLast" class="pgb">»</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -285,7 +355,7 @@ function compute(){
   const byDay=new Array(D.dates.length).fill(0);
   const byBrand=new Array(D.brands.length).fill(0);
   const byCourier=new Array(D.couriers.length).fill(0);
-  const byService=new Array(D.services.length).fill(0);
+  const byTipo=new Array(D.tipos.length).fill(0);
   const zc=new Array(D.zips.length).fill(0);
   let total=0,deliv=0,cTot=0,cPlot=0,baTot=0,baPlot=0;
   const O=D.orders,HG=D.zipHasGeo,BA=D.zipIsBA;
@@ -296,11 +366,11 @@ function compute(){
     byDay[o[3]]++;                             // daily series ignores the date filter (keeps context)
     if(selDate!==null&&o[3]!==selDate)continue; // date filter applies to everything else
     total++;if(o[5])deliv++;
-    byBrand[o[0]]++;byCourier[o[1]]++;byService[o[2]]++;
+    byBrand[o[0]]++;byCourier[o[1]]++;byTipo[o[6]]++;
     const z=o[4];
     if(z>=0){zc[z]++;cTot++;const hg=HG[z],ba=BA[z];if(hg)cPlot++;if(ba){baTot++;if(hg)baPlot++;}}
   }
-  return{total,deliv,byDay,byBrand,byCourier,byService,zc,cTot,cPlot,baTot,baPlot,baOrders:baTot,plotted:baPlot};
+  return{total,deliv,byDay,byBrand,byCourier,byTipo,zc,cTot,cPlot,baTot,baPlot,baOrders:baTot,plotted:baPlot};
 }
 
 /* ---------- KPIs ---------- */
@@ -372,8 +442,8 @@ function renderCourier(a){
 }
 
 /* ---------- SERVICE ---------- */
-function renderService(a){
-  const rows=D.services.map((s,i)=>({t:D.svc_nice[i],v:a.byService[i],c:svcColor(i)})).filter(r=>r.v>0).sort((x,y)=>y.v-x.v);
+function renderTipo(a){
+  const rows=D.tipos.map((t,i)=>({t:t,v:a.byTipo[i],c:TCOL[t]||'#5c6b7c'})).filter(r=>r.v>0).sort((x,y)=>y.v-x.v);
   const total=rows.reduce((s,r)=>s+r.v,0),max=Math.max(1,...rows.map(r=>r.v));
   const el=document.getElementById('svc'),donut=document.getElementById('svcDonut');
   if(!rows.length){el.innerHTML='<div class="empty">Sin datos</div>';donut.innerHTML='';document.getElementById('svcMeta').textContent='';return;}
@@ -535,7 +605,7 @@ function onFilter(){
   const a=compute();
   persist();
   document.getElementById('shownN').textContent=nf.format(a.total);
-  renderKPI(a);renderLine(a);renderBrand(a);renderCourier(a);renderService(a);renderMap(a);
+  renderKPI(a);renderLine(a);renderBrand(a);renderCourier(a);renderTipo(a);renderMap(a);renderTable();
   updateFilterLabels();
 }
 
@@ -621,36 +691,101 @@ async function loadData(){
   }finally{loading=false;document.getElementById('refreshBtn').disabled=false;}
 }
 
-/* ---------- EXPORTAR A EXCEL (respeta los filtros activos) ---------- */
-async function doExport(){
+/* ---------- EXPORTAR / TABLA DE DETALLE (usan export.csv) ---------- */
+function esc(s){return (s==null?'':(''+s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+async function ensureExportRows(){
+  if(exportRows) return exportRows;
+  if(typeof XLSX==='undefined') throw new Error('No cargó la librería de Excel.');
+  const r=await fetch('export.csv?t='+Date.now(),{cache:'no-store'});
+  if(!r.ok) throw new Error('No se encontró export.csv (lo genera el Action).');
+  const wb=XLSX.read(await r.text(),{type:'string',raw:true});
+  exportRows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+  return exportRows;
+}
+function globalNameSets(){
+  return {
+    bN: selBrand.size?new Set([...selBrand].map(i=>D.brands[i])):null,
+    cN: selCourier.size?new Set([...selCourier].map(i=>D.couriers[i])):null,
+    tN: selTipo.size?new Set([...selTipo].map(i=>D.tipos[i])):null,
+    dS: selDate!==null?D.dates[selDate]:null
+  };
+}
+function passesGlobal(r,S){
+  if(S.bN&&!S.bN.has(r['Marca']))return false;
+  if(S.cN&&!S.cN.has(r['Courier']))return false;
+  if(S.tN&&!S.tN.has(r['Tipo de envío']))return false;
+  if(S.dS&&r['Fecha']!==S.dS)return false;
+  return true;
+}
+async function doExport(){   // boton grande: exporta TODO segun filtros globales (25 columnas)
   const btn=document.getElementById('exportBtn');
-  if(!D||typeof XLSX==='undefined'){alert('Todavía se están cargando los datos.');return;}
+  if(!D){return;}
   const prev=btn.textContent;btn.disabled=true;btn.textContent='Preparando…';
   try{
-    if(!exportRows){
-      const r=await fetch('export.csv?t='+Date.now(),{cache:'no-store'});
-      if(!r.ok)throw new Error('No se encontró export.csv (lo genera el Action junto con data.json).');
-      const wb=XLSX.read(await r.text(),{type:'string',raw:true});
-      exportRows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
-    }
-    const bN=selBrand.size?new Set([...selBrand].map(i=>D.brands[i])):null;
-    const cN=selCourier.size?new Set([...selCourier].map(i=>D.couriers[i])):null;
-    const tN=selTipo.size?new Set([...selTipo].map(i=>D.tipos[i])):null;
-    const dS=selDate!==null?D.dates[selDate]:null;
-    const rows=exportRows.filter(r=>{
-      if(bN&&!bN.has(r['Marca']))return false;
-      if(cN&&!cN.has(r['Courier']))return false;
-      if(tN&&!tN.has(r['Tipo de envío']))return false;
-      if(dS&&r['Fecha']!==dS)return false;
-      return true;
-    });
+    await ensureExportRows();
+    const S=globalNameSets();
+    const rows=exportRows.filter(r=>passesGlobal(r,S));
     if(!rows.length){alert('No hay pedidos que coincidan con los filtros actuales.');return;}
     const ws=XLSX.utils.json_to_sheet(rows);
-    const wb2=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb2,ws,'Pedidos');
-    const stamp=new Date().toISOString().slice(0,16).replace('T','_').replace(':','');
-    XLSX.writeFile(wb2,'pedidos_'+stamp+'.xlsx');
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Pedidos');
+    XLSX.writeFile(wb,'pedidos_'+new Date().toISOString().slice(0,16).replace('T','_').replace(':','')+'.xlsx');
   }catch(e){alert('No se pudo exportar: '+((e&&e.message)||e));}
   finally{btn.disabled=false;btn.textContent=prev;}
+}
+
+/* ----- tabla de detalle ----- */
+const TPAGE=20;
+let tblSearch='',tblSortDir='desc',tblPage=0,tblActivated=false,tblLoading=false,tblFiltered=[];
+function statusBadge(s){s=s||'';const l=s.toLowerCase();let bg='#232c38',fg='#9fb0c0';
+  if(l==='delivered'){bg='rgba(74,222,128,.14)';fg='#63d492';}
+  else if(l.indexOf('ship')>=0||l.indexOf('transit')>=0||l.indexOf('ready')>=0){bg='rgba(63,208,196,.14)';fg='#3fd0c4';}
+  else if(l==='paid'||l.indexOf('process')>=0){bg='rgba(246,178,61,.14)';fg='#f6b23d';}
+  else if(l.indexOf('cancel')>=0){bg='rgba(242,101,123,.14)';fg='#f2657b';}
+  return `<span class="badge" style="background:${bg};color:${fg}">${esc(s)||'—'}</span>`;}
+function renderTable(){
+  const body=document.getElementById('tblBody');if(!body||!D)return;
+  if(!tblActivated){body.innerHTML='<tr><td colspan="8"><div class="tblload">Desplazá hasta acá para cargar el detalle…</div></td></tr>';return;}
+  if(!exportRows){
+    if(!tblLoading){
+      body.innerHTML='<tr><td colspan="8"><div class="tblload"><div class="sp"></div><div>Cargando detalle de pedidos…</div></div></td></tr>';
+      tblLoading=true;
+      ensureExportRows().then(()=>{tblLoading=false;renderTable();}).catch(e=>{tblLoading=false;body.innerHTML='<tr><td colspan="8"><div class="empty">No se pudo cargar el detalle: '+esc((e&&e.message)||e)+'</div></td></tr>';});
+    }
+    return;
+  }
+  const S=globalNameSets(),q=tblSearch.trim().toLowerCase();
+  let rows=exportRows.filter(r=>{
+    if(!passesGlobal(r,S))return false;
+    if(q){const hay=(r['ID Pedido']+' '+r['ID Externo']+' '+r['Tracking']+' '+r['Marca']+' '+r['Courier']+' '+r['Tipo de envío']+' '+r['Estado']).toLowerCase();if(hay.indexOf(q)<0)return false;}
+    return true;
+  });
+  rows.sort((a,b)=>{const x=a['Creado']||a['Fecha']||'',y=b['Creado']||b['Fecha']||'';return tblSortDir==='desc'?(x<y?1:x>y?-1:0):(x<y?-1:x>y?1:0);});
+  tblFiltered=rows;
+  const total=rows.length,pages=Math.max(1,Math.ceil(total/TPAGE));
+  if(tblPage>=pages)tblPage=pages-1;if(tblPage<0)tblPage=0;
+  const start=tblPage*TPAGE,slice=rows.slice(start,start+TPAGE);
+  document.getElementById('tblMeta').textContent=nf.format(total)+' pedidos';
+  if(!total){body.innerHTML='<tr><td colspan="8"><div class="empty">Sin pedidos para esta selección</div></td></tr>';}
+  else{body.innerHTML=slice.map((r,i)=>`<tr>
+    <td class="num">${nf.format(start+i+1)}</td>
+    <td class="mono">${esc(r['ID Pedido'])}</td>
+    <td class="mono">${esc(r['Tracking'])||'—'}</td>
+    <td>${esc(r['Marca'])}</td>
+    <td class="mono">${esc(r['Creado'])}</td>
+    <td>${esc(r['Courier'])}</td>
+    <td>${esc(r['Tipo de envío'])}</td>
+    <td>${statusBadge(r['Estado'])}</td></tr>`).join('');}
+  document.getElementById('tblRange').textContent=total?(nf.format(start+1)+'–'+nf.format(Math.min(start+TPAGE,total))+' de '+nf.format(total)):'0 de 0';
+  document.getElementById('pgNow').textContent=(tblPage+1)+' / '+pages;
+  document.getElementById('pgFirst').disabled=document.getElementById('pgPrev').disabled=(tblPage<=0);
+  document.getElementById('pgNext').disabled=document.getElementById('pgLast').disabled=(tblPage>=pages-1);
+}
+function tblExportFn(){
+  if(!tblFiltered.length){alert('No hay pedidos para exportar.');return;}
+  const out=tblFiltered.map((r,i)=>({'N°':i+1,'ID OMS':r['ID Pedido'],'ID Tracking':r['Tracking'],'Marca':r['Marca'],
+    'Fecha de compra':r['Creado'],'Courier':r['Courier'],'Tipo de envío':r['Tipo de envío'],'Estado':r['Estado']}));
+  const ws=XLSX.utils.json_to_sheet(out);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Detalle');
+  XLSX.writeFile(wb,'detalle_pedidos_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 /* ---------- INIT ---------- */
@@ -666,6 +801,22 @@ async function doExport(){
   document.getElementById('refreshBtn').addEventListener('click',loadData);
   document.getElementById('exportBtn').addEventListener('click',doExport);
   document.getElementById('ovRetry').addEventListener('click',loadData);
+  // ---- tabla de detalle ----
+  const ts=document.getElementById('tblSearch');
+  ts.addEventListener('input',()=>{tblSearch=ts.value;tblPage=0;renderTable();});
+  const sortSel=document.querySelector('.sortsel'),sortBtn=document.getElementById('sortBtn');
+  sortBtn.addEventListener('click',e=>{e.stopPropagation();sortSel.classList.toggle('open');});
+  document.addEventListener('click',()=>sortSel.classList.remove('open'));
+  document.getElementById('sortMenu').addEventListener('click',e=>e.stopPropagation());
+  document.querySelectorAll('#sortMenu .sopt').forEach(o=>o.addEventListener('click',()=>{
+    tblSortDir=o.dataset.dir;document.querySelectorAll('#sortMenu .sopt').forEach(x=>x.classList.toggle('on',x===o));
+    document.getElementById('sortLbl').textContent=o.textContent;sortSel.classList.remove('open');tblPage=0;renderTable();}));
+  document.getElementById('pgFirst').addEventListener('click',()=>{tblPage=0;renderTable();});
+  document.getElementById('pgPrev').addEventListener('click',()=>{tblPage--;renderTable();});
+  document.getElementById('pgNext').addEventListener('click',()=>{tblPage++;renderTable();});
+  document.getElementById('pgLast').addEventListener('click',()=>{tblPage=1e9;renderTable();});
+  document.getElementById('tblExport').addEventListener('click',tblExportFn);
+  new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting&&!tblActivated){tblActivated=true;renderTable();}});},{rootMargin:'250px'}).observe(document.querySelector('.dtable'));
   loadData();
   setInterval(loadData,REFRESH_MS);
 })();
