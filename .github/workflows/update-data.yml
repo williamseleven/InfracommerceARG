@@ -3,6 +3,7 @@ name: Actualizar Torre de Despacho
 on:
   schedule:
     - cron: '*/5 * * * *'
+    - cron: '17 12 * * 1'   # semanal: dispara el keepalive
   workflow_dispatch:
 
 permissions:
@@ -45,11 +46,14 @@ jobs:
         uses: actions/deploy-pages@v4
 
   # Evita que GitHub desactive el workflow tras 60 días sin commits.
-  # Usa la API (no hace commits) y solo actúa cuando hace falta.
+  # Corre una vez por semana y llama a la API de GitHub (sin acciones de terceros ni commits).
   keepalive:
+    if: github.event.schedule == '17 12 * * 1' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: gautamkrishnar/keepalive-workflow@v2
+      - name: Mantener activo el workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/update-data.yml/enable"
