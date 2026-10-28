@@ -43,3 +43,13 @@ jobs:
       - name: Publicar en GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Evita que GitHub desactive el workflow tras 60 días sin commits.
+  # Usa la API (no hace commits) y solo actúa cuando hace falta.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2
